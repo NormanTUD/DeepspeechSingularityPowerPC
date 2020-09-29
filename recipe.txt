@@ -49,6 +49,15 @@ From: nvidia/cuda-ppc64le:10.1-runtime
                 ml modenv/ml
                 ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
 
+%help
+	Singularity-Package for installing DeepSpeech on ML
+
+	-- Run in a VM on Taurus
+	----> startInVM --arch=power9 --time="08:00:00"
+	-- run passwd and set the root password to 'test' before running it
+	-- make sure 'mount_host_data' was run in the VM
+	-- change HOSTIP to the ip of the host
+
 %post
         echo :"
 Singularity-Package for installing DeepSpeech on ML
