@@ -6,81 +6,48 @@ From: nvidia/cuda-ppc64le:10.1-runtime
         com.nvidia.volumes.needed="nvidia_driver"
 
 %environment
-        export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
+        export DEBIAN_FRONTEND=noninteractive
+        export DS_NOTENSORFLOW=1
+        export DS_NODECODER=1
+        export MODULEPATH=/sw/installed/
+        export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
         export LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
-
         export LANG=en_US.UTF-8
         export LC_ALL=en_US.UTF-8
 
-        MODULEPATH=/sw/installed/
+        export MODULEPATH_ROOT=/sw/
+        export MODULEPATH="/sw/modules/ml/classic:/sw/modules/ml/vis:/sw/modules/ml/tools:/sw/modules/ml/toolchain:/sw/modules/ml/system:/sw/modules/ml/phys:/sw/modules/ml/perf:/sw/modules/ml/numlib:/sw/modules/ml/mpi:/sw/modules/ml/math:/sw/modules/ml/lib:/sw/modules/ml/lang:/sw/modules/ml/geo:/sw/modules/ml/devel:/sw/modules/ml/debugger:/sw/modules/ml/data:/sw/modules/ml/compiler:/sw/modules/ml/chem:/sw/modules/ml/cae:/sw/modules/ml/bio:/sw/modules/ml/base:/sw/modules/taurus/environment"
 
-        module () {
-		eval `$LMOD_CMD sh "$@"`
-        }
+        export NVIDIA_DRIVER_CAPABILITIES=compute,utility
+        export NVIDIA_VISIBLE_DEVICES=all
+        export NCCL_VERSION=2.3.5
+        export LIBRARY_PATH=/usr/local/cuda/lib64/stubs
+        export CUDNN=7.6.2.24-1
+        export CUDA_VERSION=10.0.130
+        export CUDA_PKG_VERSION=10-0=10.0.130-1
 
-        ml () {
-		eval $($LMOD_DIR/ml_cmd "$@")
-        }
-
-	export DEBIAN_FRONTEND=noninteractive
-
-	export MODULEPATH=/sw/modules/scs5/classic:/sw/modules/scs5/vis:/sw/modules/scs5/tools:/sw/modules/scs5/toolchain:/sw/modules/scs5/system:/sw/modules/scs5/phys:/sw/modules/scs5/perf:/sw/modules/scs5/numlib:/sw/modules/scs5/mpi:/sw/modules/scs5/math:/sw/modules/scs5/lib:/sw/modules/scs5/lang:/sw/modules/scs5/geo:/sw/modules/scs5/devel:/sw/modules/scs5/debugger:/sw/modules/scs5/data:/sw/modules/scs5/compiler:/sw/modules/scs5/chem:/sw/modules/scs5/cae:/sw/modules/scs5/bio:/sw/modules/scs5/base:/sw/modules/taurus/environment
-
-        PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
-        LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
-        NVIDIA_VISIBLE_DEVICES=all
-        NVIDIA_DRIVER_CAPABILITIES=compute,utility
-        NCCL_VERSION=2.3.5
-        LIBRARY_PATH=/usr/local/cuda/lib64/stubs
-
-        CUDNN=7.6.2.24-1
-        CUDA_VERSION=10.0.130
-        CUDA_PKG_VERSION=10-0=10.0.130-1
+        export HOSTIP=192.168.0.2
+        export PYTHONPATH=/ds/training/:$PYTHONPATH
 
 %runscript
-	if [[ ! -d /sw/modules/scs5/toolchain ]]; then
-		echo "sudo sshfs s3811141@tauruslogin6.hrsk.tu-dresden.de:/software/ /software/"
-		echo "sudo sshfs s3811141@tauruslogin6.hrsk.tu-dresden.de:/sw/ /sw/"
-		echo "sudo sshfs s3811141@tauruslogin6.hrsk.tu-dresden.de:/opt/ /taurus_opt"
-		exit
-	fi
+        echoblue "Installing and mounting sshfs"
+                echored "Enter password when asked for it"
+                        sshfs -o StrictHostKeyChecking=no root@$HOSTIP:/host_data/software /software
+                        sshfs -o StrictHostKeyChecking=no root@$HOSTIP:/host_data/sw /sw
 
-	export MODULEPATH=/sw/modules/scs5/classic:/sw/modules/scs5/vis:/sw/modules/scs5/tools:/sw/modules/scs5/toolchain:/sw/modules/scs5/system:/sw/modules/scs5/phys:/sw/modules/scs5/perf:/sw/modules/scs5/numlib:/sw/modules/scs5/mpi:/sw/modules/scs5/math:/sw/modules/scs5/lib:/sw/modules/scs5/lang:/sw/modules/scs5/geo:/sw/modules/scs5/devel:/sw/modules/scs5/debugger:/sw/modules/scs5/data:/sw/modules/scs5/compiler:/sw/modules/scs5/chem:/sw/modules/scs5/cae:/sw/modules/scs5/bio:/sw/modules/scs5/base:/sw/modules/taurus/environment
-	export LMOD_DIR=/usr/local/lmod/lmod/libexec
-	export LMOD_CMD=/usr/local/lmod/lmod/libexec/lmod
+        echoblue "Loading ml-stuff"
+                . /usr/local/lmod/lmod/init/profile
 
-	module () {
-		eval `$LMOD_CMD sh "$@"`
-	}
+                systemBaseMPATH="/sw/modules/taurus/environment"
+                ml use /sw/modules/taurus/environment
 
-	ml () {
-		eval $($LMOD_DIR/ml_cmd "$@")
-	}
+                echogreen "Module Table"
+                        for i in $(seq -f "%03g" $_ModuleTable_Sz_); do eval "echo \$_ModuleTable${i}_"; done | base64 --decode 
 
-	ml use /sw/modules/scs5/toolchain
-	ml use /sw/modules/scs5/system
-	ml use /sw/modules/scs5/phys
-	ml use /sw/modules/scs5/perf
-	ml use /sw/modules/scs5/numlib
-	ml use /sw/modules/scs5/mpi
-	ml use /sw/modules/scs5/math
-	ml use /sw/modules/scs5/lib
-	ml use /sw/modules/scs5/lang
-	ml use /sw/modules/scs5/geo
-	ml use /sw/modules/scs5/devel
-	ml use /sw/modules/scs5/debugger
-	ml use /sw/modules/scs5/data
-	ml use /sw/modules/scs5/compiler
-	ml use /sw/modules/scs5/chem
-	ml use /sw/modules/scs5/cae
-	ml use /sw/modules/scs5/bio
-	ml use /sw/modules/scs5/base
-	ml use /sw/modules/taurus/environment
-
-	ml modenv/ml
-	ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
-
-        exec /bin/bash "$@"
+                module av
+                ml --force unload modenv/scs5
+                ml modenv/ml
+                ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
 
 %post
         echo :"
@@ -147,101 +114,82 @@ Singularity-Package for installing DeepSpeech on ML
                 apt-get update
 
                 apt-get -y install\
-                        gcc\
-                        tcl8.6-dev\
-                        liblua5.1-0-dev\
-                        lua-posix\
-                        lua-filesystem\
-                        tclsh\
-                        less\
-                        git\
-                        lua5.1\
-                        liblua5.1-0\
-                        lua-filesystem\
-                        lua-posix\
-                        luarocks\
-                        vim\
-                        less\
-                        libcudnn7\
-                        zsh\
-                        fakeroot\
-                        sudo\
-                        libffi-dev\
-                        software-properties-common\
-                        apt-transport-https\
-                        tzdata\
-                        curl\
-                        gfortran\
-                        libopenblas-dev\
-                        liblapack-dev\
-                        python-dev\
-                        cython\
-                        gdebi\
-                        wget\
-                        build-essential\
-                        clang\
-                        cmake\
-                        tar\
-                        make\
-                        python\
-                        python3\
-                        python3-alembic\
-                        python3-dev\
-                        python3-wheel\
-                        python-dev\
-                        python-pip\
-                        python-virtualenv\
-                        libhdf5-dev\
-                        sed\
                         alembic\
                         apt\
+                        apt-transport-https\
                         apt-utils\
+                        build-essential\
                         ca-certificates\
+                        clang\
+                        cmake\
+                        curl\
+                        cython\
                         environment-modules\
-                        git-lfs\
+                        fakeroot\
                         g++\
                         gcc\
+                        gdebi\
+                        gfortran\
                         git\
+                        git-lfs\
+                        ibverbs-providers\
+                        less\
                         libasound2\
+                        libboost-all-dev\
+                        libcudnn7\
                         libcurl4-openssl-dev\
                         libegl1-mesa\
+                        libffi-dev\
                         libglu1-mesa-dev\
+                        libhdf5-dev\
                         libibverbs1\
                         libibverbs-dev\
-                        ibverbs-providers\
+                        liblapack-dev\
+                        liblua5.1-0\
+                        liblua5.1-0-dev\
                         libnss3\
                         libobjc4\
                         libobjc-5-dev\
+                        libopenblas-dev\
+                        libpython2.7-dev\
                         libsox-fmt-mp3\
                         libssl1.0.0\
                         libssl-dev\
                         libxml2-dev\
                         libxslt1-dev\
+                        libyaml-dev\
                         locales\
+                        lua5.1\
+                        lua-filesystem\
+                        lua-posix\
+                        luarocks\
+                        make\
+                        nvidia-opencl-dev\
+                        ocl-icd-libopencl1\
+                        ocl-icd-opencl-dev\
+                        opencl-headers\
+                        python\
+                        python3\
+                        python3-alembic\
+                        python3-dev\
+                        python3-pip\
+                        python3-wheel\
+                        python-dev\
+                        python-pip\
+                        python-virtualenv\
                         sed\
+                        software-properties-common\
                         sox\
+                        sudo\
+                        swig\
+                        tar\
+                        tcl8.6-dev\
+                        tclsh\
+                        tzdata\
                         uuid-dev\
                         vim\
                         wget\
-                        gfortran\
-                        libopenblas-dev\
-                        liblapack-dev\
-                        libyaml-dev\
-                        libpython2.7-dev\
-                        python3-pip\
-                        libffi-dev\
-                        nvidia-opencl-dev\
-                        ocl-icd-libopencl1\
-                        opencl-headers\
-                        ocl-icd-opencl-dev\
-                        libboost-all-dev\
-                        swig\
-                        python\
-                        python-pip\
-                        swig\
-                        cmake\
-                        make\
-                        gcc
+                        zsh
 
         echoblue "Installing Lmod"
                 luarocks install luaposix
