@@ -1,0 +1,410 @@
+Bootstrap: docker
+From: nvidia/cuda-ppc64le:10.1-runtime
+
+%labels
+        maintainer "Norman Koch <norman.koch@tu-dresden.de>"
+        com.nvidia.volumes.needed="nvidia_driver"
+
+%environment
+        export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
+        export LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+
+        export LANG=en_US.UTF-8
+        export LC_ALL=en_US.UTF-8
+
+        MODULEPATH=/sw/installed/
+
+        module () {
+		eval `$LMOD_CMD sh "$@"`
+        }
+
+        ml () {
+		eval $($LMOD_DIR/ml_cmd "$@")
+        }
+
+	export DEBIAN_FRONTEND=noninteractive
+
+	export MODULEPATH=/sw/modules/scs5/classic:/sw/modules/scs5/vis:/sw/modules/scs5/tools:/sw/modules/scs5/toolchain:/sw/modules/scs5/system:/sw/modules/scs5/phys:/sw/modules/scs5/perf:/sw/modules/scs5/numlib:/sw/modules/scs5/mpi:/sw/modules/scs5/math:/sw/modules/scs5/lib:/sw/modules/scs5/lang:/sw/modules/scs5/geo:/sw/modules/scs5/devel:/sw/modules/scs5/debugger:/sw/modules/scs5/data:/sw/modules/scs5/compiler:/sw/modules/scs5/chem:/sw/modules/scs5/cae:/sw/modules/scs5/bio:/sw/modules/scs5/base:/sw/modules/taurus/environment
+
+        PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
+        LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+        NVIDIA_VISIBLE_DEVICES=all
+        NVIDIA_DRIVER_CAPABILITIES=compute,utility
+        NCCL_VERSION=2.3.5
+        LIBRARY_PATH=/usr/local/cuda/lib64/stubs
+
+        CUDNN=7.6.2.24-1
+        CUDA_VERSION=10.0.130
+        CUDA_PKG_VERSION=10-0=10.0.130-1
+
+%runscript
+	if [[ ! -d /sw/modules/scs5/toolchain ]]; then
+		echo "sudo sshfs s3811141@tauruslogin6.hrsk.tu-dresden.de:/software/ /software/"
+		echo "sudo sshfs s3811141@tauruslogin6.hrsk.tu-dresden.de:/sw/ /sw/"
+		echo "sudo sshfs s3811141@tauruslogin6.hrsk.tu-dresden.de:/opt/ /taurus_opt"
+		exit
+	fi
+
+	export MODULEPATH=/sw/modules/scs5/classic:/sw/modules/scs5/vis:/sw/modules/scs5/tools:/sw/modules/scs5/toolchain:/sw/modules/scs5/system:/sw/modules/scs5/phys:/sw/modules/scs5/perf:/sw/modules/scs5/numlib:/sw/modules/scs5/mpi:/sw/modules/scs5/math:/sw/modules/scs5/lib:/sw/modules/scs5/lang:/sw/modules/scs5/geo:/sw/modules/scs5/devel:/sw/modules/scs5/debugger:/sw/modules/scs5/data:/sw/modules/scs5/compiler:/sw/modules/scs5/chem:/sw/modules/scs5/cae:/sw/modules/scs5/bio:/sw/modules/scs5/base:/sw/modules/taurus/environment
+	export LMOD_DIR=/usr/local/lmod/lmod/libexec
+	export LMOD_CMD=/usr/local/lmod/lmod/libexec/lmod
+
+	module () {
+		eval `$LMOD_CMD sh "$@"`
+	}
+
+	ml () {
+		eval $($LMOD_DIR/ml_cmd "$@")
+	}
+
+	ml use /sw/modules/scs5/toolchain
+	ml use /sw/modules/scs5/system
+	ml use /sw/modules/scs5/phys
+	ml use /sw/modules/scs5/perf
+	ml use /sw/modules/scs5/numlib
+	ml use /sw/modules/scs5/mpi
+	ml use /sw/modules/scs5/math
+	ml use /sw/modules/scs5/lib
+	ml use /sw/modules/scs5/lang
+	ml use /sw/modules/scs5/geo
+	ml use /sw/modules/scs5/devel
+	ml use /sw/modules/scs5/debugger
+	ml use /sw/modules/scs5/data
+	ml use /sw/modules/scs5/compiler
+	ml use /sw/modules/scs5/chem
+	ml use /sw/modules/scs5/cae
+	ml use /sw/modules/scs5/bio
+	ml use /sw/modules/scs5/base
+	ml use /sw/modules/taurus/environment
+
+	ml modenv/ml
+	ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
+
+        exec /bin/bash "$@"
+
+%post
+        echo :"
+Singularity-Package for installing DeepSpeech on ML
+
+-- Run in a VM on Taurus 
+----> startInVM --arch=power9 --time="08:00:00"
+-- run passwd and set the root password to 'test' before running it
+-- make sure 'mount_host_data' was run in the VM
+-- change HOSTIP to the ip of the host
+        "
+
+        export BASEURL=https://raw.githubusercontent.com/NormanTUD/DeepspeechSingularityPowerPC/master/
+
+        wget --no-check-certificate $BASEURL/echoc.sh
+        sh echoc.sh
+
+        echoblue "Setting limits"
+                ulimit -Hn
+                ulimit -n 16384
+                ulimit -Hn
+
+        echoblue "Setting variables"
+                export DEBIAN_FRONTEND=noninteractive
+                export DS_NOTENSORFLOW=1
+                export DS_NODECODER=1
+                export MODULEPATH=/sw/installed/
+                export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
+                export LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+                export LANG=en_US.UTF-8
+                export LC_ALL=en_US.UTF-8
+
+                export MODULEPATH_ROOT=/sw/
+                export MODULEPATH="/sw/modules/ml/classic:/sw/modules/ml/vis:/sw/modules/ml/tools:/sw/modules/ml/toolchain:/sw/modules/ml/system:/sw/modules/ml/phys:/sw/modules/ml/perf:/sw/modules/ml/numlib:/sw/modules/ml/mpi:/sw/modules/ml/math:/sw/modules/ml/lib:/sw/modules/ml/lang:/sw/modules/ml/geo:/sw/modules/ml/devel:/sw/modules/ml/debugger:/sw/modules/ml/data:/sw/modules/ml/compiler:/sw/modules/ml/chem:/sw/modules/ml/cae:/sw/modules/ml/bio:/sw/modules/ml/base:/sw/modules/taurus/environment"
+
+                export NVIDIA_DRIVER_CAPABILITIES=compute,utility
+                export NVIDIA_VISIBLE_DEVICES=all
+                export NCCL_VERSION=2.3.5
+                export LIBRARY_PATH=/usr/local/cuda/lib64/stubs
+                export CUDNN=7.6.2.24-1
+                export CUDA_VERSION=10.0.130
+                export CUDA_PKG_VERSION=10-0=10.0.130-1
+
+                export HOSTIP=192.168.0.2
+                export PYTHONPATH=/ds/training/:$PYTHONPATH
+
+        echoblue "Creating folders that sshfs can mount into"
+                mkdir /scratch
+                mkdir /sw
+                mkdir /projects
+                mkdir /software
+
+        echoblue "Installing and mounting sshfs"
+                apt-get update
+                apt-get -y install sshfs
+                echo "test" | sshfs -o password_stdin -o StrictHostKeyChecking=no root@$HOSTIP:/host_data/software /software
+                echo "test" | sshfs -o password_stdin -o StrictHostKeyChecking=no root@$HOSTIP:/host_data/sw /sw
+
+        echoblue "Writing NVIDIA-files"
+                echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf
+                echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf
+
+        echoblue "Installing stuff via apt-get"
+                apt-get update
+
+                apt-get -y install\
+                        gcc\
+                        tcl8.6-dev\
+                        liblua5.1-0-dev\
+                        lua-posix\
+                        lua-filesystem\
+                        tclsh\
+                        less\
+                        git\
+                        lua5.1\
+                        liblua5.1-0\
+                        lua-filesystem\
+                        lua-posix\
+                        luarocks\
+                        vim\
+                        less\
+                        libcudnn7\
+                        zsh\
+                        fakeroot\
+                        sudo\
+                        libffi-dev\
+                        software-properties-common\
+                        apt-transport-https\
+                        tzdata\
+                        curl\
+                        gfortran\
+                        libopenblas-dev\
+                        liblapack-dev\
+                        python-dev\
+                        cython\
+                        gdebi\
+                        wget\
+                        build-essential\
+                        clang\
+                        cmake\
+                        tar\
+                        make\
+                        python\
+                        python3\
+                        python3-alembic\
+                        python3-dev\
+                        python3-wheel\
+                        python-dev\
+                        python-pip\
+                        python-virtualenv\
+                        libhdf5-dev\
+                        sed\
+                        alembic\
+                        apt\
+                        apt-utils\
+                        ca-certificates\
+                        environment-modules\
+                        git-lfs\
+                        g++\
+                        gcc\
+                        git\
+                        libasound2\
+                        libcurl4-openssl-dev\
+                        libegl1-mesa\
+                        libglu1-mesa-dev\
+                        libibverbs1\
+                        libibverbs-dev\
+                        ibverbs-providers\
+                        libnss3\
+                        libobjc4\
+                        libobjc-5-dev\
+                        libsox-fmt-mp3\
+                        libssl1.0.0\
+                        libssl-dev\
+                        libxml2-dev\
+                        libxslt1-dev\
+                        locales\
+                        sed\
+                        sox\
+                        uuid-dev\
+                        vim\
+                        wget\
+                        gfortran\
+                        libopenblas-dev\
+                        liblapack-dev\
+                        libyaml-dev\
+                        libpython2.7-dev\
+                        python3-pip\
+                        libffi-dev\
+                        nvidia-opencl-dev\
+                        ocl-icd-libopencl1\
+                        opencl-headers\
+                        ocl-icd-opencl-dev\
+                        libboost-all-dev\
+                        swig\
+                        python\
+                        python-pip\
+                        swig\
+                        cmake\
+                        make\
+                        gcc
+
+        echoblue "Installing Lmod"
+                luarocks install luaposix
+
+                mkdir /lmodsrcdir
+                cd /lmodsrcdir
+                git clone https://github.com/TACC/Lmod.git .
+                ./configure --with-fastTCLInterp=no
+                make install
+
+                apt-get update
+
+                apt-get -y install lmod
+
+        echoblue "Making sure libhdf5 is accessible"
+                cp /usr/lib/powerpc64le-linux-gnu/hdf5/serial/libhdf5.so /usr/local/lib 
+
+        echoblue "Installing python-packages via pip"
+                python3 -m pip install --upgrade pip setuptools
+
+                pip3 install Cython
+
+                pip3 install --upgrade\
+                        pip==20.0.2\
+                        wheel==0.34.2\
+
+                /usr/bin/python3 -m pip install --upgrade pip
+
+                pip3 install progressbar
+
+        echoblue "Installing webrtcvad"
+
+                mkdir -p /webrtcvad
+                cd /webrtcvad
+                wget --no-check-certificate $BASEURL/webrtcvad-2.0.10-ppc.tar.gz
+                pip3 install webrtcvad-2.0.10-ppc.tar.gz
+
+        echoblue "Compiling and installing llvm"
+                mkdir -p /llvm/build
+                cd /llvm/
+                wget --no-check-certificate $BASEURL/llvm-9.0.1.src.tar.xz
+                tar xf llvm-9.0.1.src.tar.xz
+                cd build
+                cmake /llvm/llvm-9.0.1.src
+                sed -i "s/CMAKE_BUILD_TYPE:STRING=Debug/CMAKE_BUILD_TYPE:STRING=Release/" CMakeCache.txt
+                cmake --build .
+                cmake --build . --target install
+
+        echoblue "Setting timezone to New York"
+                ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
+                dpkg-reconfigure --frontend noninteractive tzdata
+
+        echoblue "Installing git lfs"
+                curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+                add-apt-repository ppa:marutter/rrutter
+                apt-get -y install git-lfs
+                ln -s cuda-${CUDA_PKG_VERSION} /usr/local/cuda
+
+        echoblue "Setting locales"
+                locale-gen en_US.UTF-8
+                locale-gen en_US en_US.UTF-8
+                dpkg-reconfigure locales
+
+        echoblue "Installing more stuff via pip that was previously not able to install"
+                pip3 install --upgrade\
+                        pip==20.0.2\
+                        wheel==0.34.2\
+                        llvmlite
+
+                pip3 install\
+                        absl-py==0.9.0\
+                        argparse attrdict==2.0.1\
+                        bs4\
+                        futures==3.1.1\
+                        json-e==2.3.1\
+                        librosa networkx==2.2\
+                        optuna opuslib==2.0.0\
+                        pandas\
+                        progressbar2==3.47.0\
+                        python-utils==2.3.0\
+                        pyxdg\
+                        pyyaml==5.1.1\
+                        requests==2.22.0\
+                        semver\
+                        six==1.13.0\
+                        slugid==1.0.7\
+                        soundfile\
+                        sox\
+                        virtualenv\
+                        setuptools\
+                        numpy\
+                        scipy
+
+	echoblue "Installing setuptools"
+                mkdir /setuptools/
+                cd /setuptools/
+                wget --no-check-certificate $BASEURL/setuptools.zip
+                unzip setuptools.zip
+                python3 bootstrap.py
+                python3 setup.py install
+
+
+
+        echoblue "Cleaning apt-get resources"
+                apt-get clean
+
+	echoblue "Downloading stt"
+                mkdir /stt/
+                cd /stt/
+                wget --no-check-certificate $BASEURL/stt.zip
+                unzip stt.zip
+                rm stt.zip
+                echogreen "Changing stt-stuff with sed"
+                sed -i 's/ + tensorflow_pypi_dep//' setup.py
+                sed -i 's/ + decoder_pypi_dep//' setup.py
+                sed -i 's/ + llvmlite//' setup.py
+                pip3 install --upgrade -e /stt/
+
+        echoblue "Downloading DS"
+                mkdir /ds/
+                git clone --depth 1 https://github.com/mozilla/DeepSpeech /ds/
+
+        echoblue "Installing ctcdecode"
+                cd /ds/native_client/
+                rm definitions.mk
+                wget --no-check-certificate $BASEURL/definitions.mk
+                cd ctcdecode
+                sed -i '/ext_modules=/d' setup.py
+                CXX=g++-7 make all
+
+                echogreen "Fixing pip"
+                        sed -i 's/if install_req.link/if 0 and install_req.link/' /usr/lib/python3/dist-packages/pip/req/req_set.py
+                cd /ds/native_client/ctcdecode
+                make bindings NUM_PROCESSES=8
+                pip3 install dist/*.whl
+
+                pip3 install --upgrade -e .
+
+        echoblue "Installing DS"
+                wget --no-check-certificate $BASEURL/requirements.txt -O /ds/requirements.txt
+                sed -i 's/pandas==0.25.3/pandas/' /ds/requirements_eval_tflite.txt
+                sed --in-place '/deepspeech/d' /ds/requirements_eval_tflite.txt
+                sed --in-place '/mozilla_voice_stt_tflite/d' /ds/requirements_eval_tflite.txt
+                for i in $(cat /ds/requirements_eval_tflite.txt); do
+                        echo '======= $i ==========>';
+                        pip3 install $i || true
+                done
+                pip3 install -r /ds/requirements_tests.txt
+                pip3 install -r /ds/requirements_transcribe.txt
+
+                sed -i 's/1.15.2/1.15.0/' setup.py
+                pip3 install --upgrade --force-reinstall --ignore-installed -e .
+
+	echoblue "Loading lmod and modules"
+                . /usr/local/lmod/lmod/init/profile
+
+                systemBaseMPATH="/sw/modules/taurus/environment"
+                ml use /sw/modules/taurus/environment
+
+                echogreen "Module Table"
+                        for i in $(seq -f "%03g" $_ModuleTable_Sz_); do eval "echo \$_ModuleTable${i}_"; done | base64 --decode 
+
+                module av
+                ml --force unload modenv/scs5
+                ml modenv/ml
+                ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
