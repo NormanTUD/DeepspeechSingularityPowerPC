@@ -241,10 +241,10 @@ Singularity-Package for installing DeepSpeech on ML
 
         echoblue "Compiling and installing llvm"
                 cd /llvm/
-                wget --no-check-certificate $BASEURL/llvm-9.0.1.src.tar.xz
-                tar xf llvm-9.0.1.src.tar.xz
+                wget --no-check-certificate $BASEURL/llvm-7.1.0.src.tar.xz?raw=true -O /llvm/llvm-7.1.0.src.tar.xz
+                tar xf llvm-7.1.0.src.tar.xz
                 cd build
-                cmake /llvm/llvm-9.0.1.src
+                cmake /llvm/llvm-7.1.0.src
                 sed -i "s/CMAKE_BUILD_TYPE:STRING=Debug/CMAKE_BUILD_TYPE:STRING=Release/" CMakeCache.txt
                 cmake --build .
                 cmake --build . --target install
