@@ -106,8 +106,16 @@ Singularity-Package for installing DeepSpeech on ML
         echoblue "Creating folders that sshfs can mount into"
                 mkdir /scratch
                 mkdir /sw
-                mkdir /projects
                 mkdir /software
+
+        echoblue "Creating folders"
+                mkdir /lmodsrcdir
+                mkdir /webrtcvad
+                mkdir /llvm
+                mkdir /llvm/build
+                mkdir /setuptools
+                mkdir /stt
+                mkdir /ds
 
         echoblue "Installing and mounting sshfs"
                 apt-get update
@@ -120,8 +128,6 @@ Singularity-Package for installing DeepSpeech on ML
                 echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf
 
         echoblue "Installing stuff via apt-get"
-                apt-get update
-
                 apt-get -y install\
                         alembic\
                         apt\
@@ -203,7 +209,6 @@ Singularity-Package for installing DeepSpeech on ML
         echoblue "Installing Lmod"
                 luarocks install luaposix
 
-                mkdir /lmodsrcdir
                 cd /lmodsrcdir
                 git clone https://github.com/TACC/Lmod.git .
                 ./configure --with-fastTCLInterp=no
@@ -230,13 +235,11 @@ Singularity-Package for installing DeepSpeech on ML
                 pip3 install progressbar
 
         echoblue "Installing webrtcvad"
-                mkdir -p /webrtcvad
                 cd /webrtcvad
                 wget --no-check-certificate $BASEURL/webrtcvad-2.0.10-ppc.tar.gz
                 pip3 install webrtcvad-2.0.10-ppc.tar.gz
 
         echoblue "Compiling and installing llvm"
-                mkdir -p /llvm/build
                 cd /llvm/
                 wget --no-check-certificate $BASEURL/llvm-9.0.1.src.tar.xz
                 tar xf llvm-9.0.1.src.tar.xz
@@ -251,8 +254,7 @@ Singularity-Package for installing DeepSpeech on ML
                 dpkg-reconfigure --frontend noninteractive tzdata
 
         echoblue "Installing git lfs"
-                curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
-                add-apt-repository ppa:marutter/rrutter
+                curl -s $BASEURL/git-lfs.sh | bash
                 apt-get -y install git-lfs
                 ln -s cuda-${CUDA_PKG_VERSION} /usr/local/cuda
 
@@ -292,7 +294,6 @@ Singularity-Package for installing DeepSpeech on ML
                         scipy
 
 	echoblue "Installing setuptools"
-                mkdir /setuptools/
                 cd /setuptools/
                 wget --no-check-certificate $BASEURL/setuptools.zip
                 unzip setuptools.zip
@@ -302,8 +303,7 @@ Singularity-Package for installing DeepSpeech on ML
         echoblue "Cleaning apt-get resources"
                 apt-get clean
 
-	echoblue "Downloading stt"
-                mkdir /stt/
+	echoblue "Downloading and installing STT"
                 cd /stt/
                 wget --no-check-certificate $BASEURL/stt.zip
                 unzip stt.zip
@@ -315,7 +315,6 @@ Singularity-Package for installing DeepSpeech on ML
                 pip3 install --upgrade -e /stt/
 
         echoblue "Downloading DS"
-                mkdir /ds/
                 git clone --depth 1 https://github.com/mozilla/DeepSpeech /ds/
 
         echoblue "Installing ctcdecode"
