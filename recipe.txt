@@ -42,7 +42,7 @@ From: nvidia/cuda-ppc64le:10.1-runtime
                 ml use /sw/modules/taurus/environment
 
                 echogreen "Module Table"
-                        for i in $(seq -f "%03g" $_ModuleTable_Sz_); do eval "echo \$_ModuleTable${i}_"; done | base64 --decode 
+                        for i in $(seq -f "%03g" $_ModuleTable_Sz_); do eval "echo \$_ModuleTable${i}_"; done | base64 --decode
 
                 module av
                 ml --force unload modenv/scs5
@@ -53,7 +53,7 @@ From: nvidia/cuda-ppc64le:10.1-runtime
         echo :"
 Singularity-Package for installing DeepSpeech on ML
 
--- Run in a VM on Taurus 
+-- Run in a VM on Taurus
 ----> startInVM --arch=power9 --time="08:00:00"
 -- run passwd and set the root password to 'test' before running it
 -- make sure 'mount_host_data' was run in the VM
@@ -205,7 +205,7 @@ Singularity-Package for installing DeepSpeech on ML
                 apt-get -y install lmod
 
         echoblue "Making sure libhdf5 is accessible"
-                cp /usr/lib/powerpc64le-linux-gnu/hdf5/serial/libhdf5.so /usr/local/lib 
+                cp /usr/lib/powerpc64le-linux-gnu/hdf5/serial/libhdf5.so /usr/local/lib
 
         echoblue "Installing python-packages via pip"
                 python3 -m pip install --upgrade pip setuptools
@@ -221,7 +221,6 @@ Singularity-Package for installing DeepSpeech on ML
                 pip3 install progressbar
 
         echoblue "Installing webrtcvad"
-
                 mkdir -p /webrtcvad
                 cd /webrtcvad
                 wget --no-check-certificate $BASEURL/webrtcvad-2.0.10-ppc.tar.gz
@@ -291,8 +290,6 @@ Singularity-Package for installing DeepSpeech on ML
                 python3 bootstrap.py
                 python3 setup.py install
 
-
-
         echoblue "Cleaning apt-get resources"
                 apt-get clean
 
@@ -350,7 +347,7 @@ Singularity-Package for installing DeepSpeech on ML
                 ml use /sw/modules/taurus/environment
 
                 echogreen "Module Table"
-                        for i in $(seq -f "%03g" $_ModuleTable_Sz_); do eval "echo \$_ModuleTable${i}_"; done | base64 --decode 
+                        for i in $(seq -f "%03g" $_ModuleTable_Sz_); do eval "echo \$_ModuleTable${i}_"; done | base64 --decode
 
                 module av
                 ml --force unload modenv/scs5
