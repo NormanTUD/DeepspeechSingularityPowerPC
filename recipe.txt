@@ -322,7 +322,6 @@ Singularity-Package for installing DeepSpeech on ML
                 rm definitions.mk
                 wget --no-check-certificate $BASEURL/definitions.mk
                 cd ctcdecode
-                sed -i '/ext_modules=/d' setup.py
                 CXX=g++-7 make all
 
                 echogreen "Fixing pip"
@@ -347,6 +346,8 @@ Singularity-Package for installing DeepSpeech on ML
 
                 sed -i 's/1.15.2/1.15.0/' setup.py
                 pip3 install --upgrade --force-reinstall --ignore-installed -e .
+
+                pip3 install absl-py
 
 	echoblue "Loading lmod and modules"
                 . /usr/local/lmod/lmod/init/profile
