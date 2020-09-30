@@ -71,6 +71,9 @@ Singularity-Package for installing DeepSpeech on ML
 
         export BASEURL=https://raw.githubusercontent.com/NormanTUD/DeepspeechSingularityPowerPC/master/
 
+        apt-get update
+        apt-get install wget
+
         wget --no-check-certificate $BASEURL/echoc.sh
         sh echoc.sh
 
