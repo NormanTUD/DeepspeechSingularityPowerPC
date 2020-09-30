@@ -166,7 +166,6 @@ Singularity-Package for installing DeepSpeech on ML
                         libobjc4\
                         libobjc-5-dev\
                         libopenblas-dev\
-                        libpython2.7-dev\
                         libsox-fmt-mp3\
                         libssl1.0.0\
                         libssl-dev\
@@ -183,15 +182,6 @@ Singularity-Package for installing DeepSpeech on ML
                         ocl-icd-libopencl1\
                         ocl-icd-opencl-dev\
                         opencl-headers\
-                        python\
-                        python3\
-                        python3-alembic\
-                        python3-dev\
-                        python3-pip\
-                        python3-wheel\
-                        python-dev\
-                        python-pip\
-                        python-virtualenv\
                         sed\
                         software-properties-common\
                         sox\
@@ -218,19 +208,34 @@ Singularity-Package for installing DeepSpeech on ML
 
                 apt-get -y install lmod
 
+	echoblue "Loading modules"
+		. /usr/local/lmod/lmod/init/profile
+
+		systemBaseMPATH="/sw/modules/taurus/environment"
+		ml use /sw/modules/taurus/environment
+
+		echogreen "Module Table"
+		    for i in $(seq -f "%03g" $_ModuleTable_Sz_); do eval "echo \$_ModuleTable${i}_"; done | base64 --decode
+		    echo ""
+
+		module av
+		ml --force unload modenv/scs5
+		ml modenv/ml
+		ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
+
         echoblue "Making sure libhdf5 is accessible"
                 cp /usr/lib/powerpc64le-linux-gnu/hdf5/serial/libhdf5.so /usr/local/lib
 
         echoblue "Installing python-packages via pip"
-                python3 -m pip install --upgrade pip setuptools
+                #python3 -m pip install --upgrade pip setuptools
 
                 pip3 install Cython
 
-                pip3 install --upgrade\
-                        pip==20.0.2\
-                        wheel==0.34.2\
+                #pip3 install --upgrade\
+                #        pip==20.0.2\
+                #        wheel==0.34.2\
 
-                /usr/bin/python3 -m pip install --upgrade pip
+                #/usr/bin/python3 -m pip install --upgrade pip
 
                 pip3 install progressbar
 
@@ -324,8 +329,8 @@ Singularity-Package for installing DeepSpeech on ML
                 cd ctcdecode
                 CXX=g++-7 make all
 
-                echogreen "Fixing pip"
-                        sed -i 's/if install_req.link/if 0 and install_req.link/' /usr/lib/python3/dist-packages/pip/req/req_set.py
+                #echogreen "Fixing pip"
+                #        sed -i 's/if install_req.link/if 0 and install_req.link/' /usr/lib/python3/dist-packages/pip/req/req_set.py
                 cd /ds/native_client/ctcdecode
                 make bindings NUM_PROCESSES=8
                 pip3 install dist/*.whl
