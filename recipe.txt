@@ -26,7 +26,8 @@ From: nvidia/cuda-ppc64le:10.1-runtime
         export CUDA_VERSION=10.0.130
         export CUDA_PKG_VERSION=10-0=10.0.130-1
 
-        export HOSTIP=192.168.0.2
+        #export HOSTIP=192.168.0.2
+	export HOSTIP=$(ip addr | grep 192 | sed -e 's/.*inet //' | sed -e 's/\/.*//')
 	echo ${HOSTIP}
         export PYTHONPATH=/ds/training/:$PYTHONPATH
 
@@ -73,7 +74,8 @@ Singularity-Package for installing DeepSpeech on ML
         export BASEURL=https://raw.githubusercontent.com/NormanTUD/DeepspeechSingularityPowerPC/master/
 
         apt-get update
-        apt-get install -y wget apt-utils
+        apt-get install -y wget apt-utils iproute2
+
 
         wget --no-check-certificate $BASEURL/echoc.sh
         sh echoc.sh
@@ -104,7 +106,8 @@ Singularity-Package for installing DeepSpeech on ML
                 export CUDA_VERSION=10.0.130
                 export CUDA_PKG_VERSION=10-0=10.0.130-1
 
-                export HOSTIP=192.168.0.2
+                #export HOSTIP=192.168.0.2
+		export HOSTIP=$(ip addr | grep 192 | sed -e 's/.*inet //' | sed -e 's/\/.*//')
 		echo ${HOSTIP}
                 export PYTHONPATH=/ds/training/:$PYTHONPATH
 
@@ -170,6 +173,7 @@ Singularity-Package for installing DeepSpeech on ML
                         libnss3\
                         libobjc4\
                         libobjc-5-dev\
+			python3-pip\
                         libopenblas-dev\
                         libsox-fmt-mp3\
                         libssl1.0.0\
