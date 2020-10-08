@@ -201,7 +201,6 @@ Singularity-Package for installing DeepSpeech on ML
 			python3-dev\
 			libc6\
 			libc6-dev\
-			libreadline-gplv2-dev\
 			libncursesw5-dev\
 			libssl-dev\
 			libsqlite3-dev\
