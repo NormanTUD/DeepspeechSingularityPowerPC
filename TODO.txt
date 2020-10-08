@@ -1,0 +1,2 @@
+- fst.zip nach /fst/ extrahieren
+- build_archive.zip in der ctcdecode neu downloaden
