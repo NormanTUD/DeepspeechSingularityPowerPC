@@ -30,6 +30,16 @@ From: nvidia/cuda-ppc64le:10.1-runtime
 	echo ${HOSTIP}
         export PYTHONPATH=/ds/training/:$PYTHONPATH
 
+
+	echoblue "Loading lmod and modules"
+                . /usr/local/lmod/lmod/init/profile
+
+                systemBaseMPATH="/sw/modules/taurus/environment"
+                ml use /sw/modules/taurus/environment
+                ml --force unload modenv/scs5
+                ml modenv/ml
+                ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
+
 %runscript
         echoblue "Installing and mounting sshfs"
                 echored "Enter password when asked for it"
@@ -359,6 +369,14 @@ Singularity-Package for installing DeepSpeech on ML
                 pip3 install --upgrade -e /stt/
 
         echoblue "Downloading DS"
+		echogreen "Fixing pip"
+			sed -i 's/if install_req.link/if 0 and install_req.link/' /usr/lib/python3/dist-packages/pip/req/req_set.py
+		mkdir /ctc/
+		cd /ctc/
+		wget $BASEURL/ds_ctcdecoder-0.9.0a9-py2-none-manylinux1_ppc64le.whl
+                pip3 install --upgrade -e /ctc/ds_ctcdecoder-0.9.0a9-py2-none-manylinux1_ppc64le.whl
+
+        echoblue "Downloading DS"
                 git clone --depth 1 https://github.com/mozilla/DeepSpeech /ds/
 
 #        echoblue "Installing ctcdecode"
@@ -376,33 +394,19 @@ Singularity-Package for installing DeepSpeech on ML
 #
 #                pip3 install --upgrade -e .
 #
-#        echoblue "Installing DS"
-#                wget --no-check-certificate $BASEURL/requirements.txt -O /ds/requirements.txt
-#                sed -i 's/pandas==0.25.3/pandas/' /ds/requirements_eval_tflite.txt
-#                sed --in-place '/deepspeech/d' /ds/requirements_eval_tflite.txt
-#                sed --in-place '/mozilla_voice_stt_tflite/d' /ds/requirements_eval_tflite.txt
-#                for i in $(cat /ds/requirements_eval_tflite.txt); do
-#                        echo '======= $i ==========>';
-#                        pip3 install $i || true
-#                done
-#                pip3 install -r /ds/requirements_tests.txt
-#                pip3 install -r /ds/requirements_transcribe.txt
-#
-#                sed -i 's/1.15.2/1.15.0/' setup.py
-#                pip3 install --upgrade --force-reinstall --ignore-installed -e .
-#
-#                pip3 install absl-py
-#
-#	echoblue "Loading lmod and modules"
-#                . /usr/local/lmod/lmod/init/profile
-#
-#                systemBaseMPATH="/sw/modules/taurus/environment"
-#                ml use /sw/modules/taurus/environment
-#
-#                #echogreen "Module Table"
-#                #        for i in $(seq -f "%03g" $_ModuleTable_Sz_); do eval "echo \$_ModuleTable${i}_"; done | base64 --decode
-#
-#                module av
-#                ml --force unload modenv/scs5
-#                ml modenv/ml
-#                ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
+        echoblue "Installing DS"
+                wget --no-check-certificate $BASEURL/requirements.txt -O /ds/requirements.txt
+                sed -i 's/pandas==0.25.3/pandas/' /ds/requirements_eval_tflite.txt
+                sed --in-place '/deepspeech/d' /ds/requirements_eval_tflite.txt
+                sed --in-place '/mozilla_voice_stt_tflite/d' /ds/requirements_eval_tflite.txt
+                for i in $(cat /ds/requirements_eval_tflite.txt); do
+                        echo '======= $i ==========>';
+                        pip3 install $i || true
+                done
+                pip3 install -r /ds/requirements_tests.txt
+                pip3 install -r /ds/requirements_transcribe.txt
+
+                sed -i 's/1.15.2/1.15.0/' setup.py
+                pip3 install --upgrade --force-reinstall --ignore-installed -e .
+
+                pip3 install absl-py
