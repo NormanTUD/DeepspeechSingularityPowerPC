@@ -374,7 +374,7 @@ Singularity-Package for installing DeepSpeech on ML
 		mkdir /ctc/
 		cd /ctc/
 		wget $BASEURL/ds_ctcdecoder-0.9.0a9-py2-none-manylinux1_ppc64le.whl
-                pip3 install --upgrade -e /ctc/ds_ctcdecoder-0.9.0a9-py2-none-manylinux1_ppc64le.whl
+		python3 -m pip install --force /ctc/ds_ctcdecoder-0.9.0a9-py2-none-manylinux1_ppc64le.whl || true
 
         echoblue "Downloading DS"
                 git clone --depth 1 https://github.com/mozilla/DeepSpeech /ds/
@@ -395,6 +395,7 @@ Singularity-Package for installing DeepSpeech on ML
 #                pip3 install --upgrade -e .
 #
         echoblue "Installing DS"
+		cd /ds/
                 wget --no-check-certificate $BASEURL/requirements.txt -O /ds/requirements.txt
                 sed -i 's/pandas==0.25.3/pandas/' /ds/requirements_eval_tflite.txt
                 sed --in-place '/deepspeech/d' /ds/requirements_eval_tflite.txt
