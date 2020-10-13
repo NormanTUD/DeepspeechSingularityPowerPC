@@ -7,9 +7,9 @@ SO_SEARCH ?= $(TFDIR)/bazel-bin/
 
 TOOL_AS   := as
 #TOOL_CC   := gcc
-TOOL_CC   := powerpc-linux-gnu-gcc
-#TOOL_CXX  := c++
-TOOL_CXX  := powerpc-linux-gnu-g++
+#TOOL_CC   := powerpc-linux-gnu-gcc
+TOOL_CXX  := c++
+#TOOL_CXX  := powerpc-linux-gnu-g++
 TOOL_LD   := ld
 TOOL_LDD  := ldd
 TOOL_LIBEXE :=
