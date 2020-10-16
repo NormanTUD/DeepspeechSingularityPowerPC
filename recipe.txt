@@ -234,7 +234,6 @@ Singularity-Package for installing DeepSpeech on ML
 			python3-numpy\
 			python3-pip\
 			software-properties-common\
-			swig\
 			zip\
 			zlib1g-dev\
 			libcurl3-dev
