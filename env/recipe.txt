@@ -1,0 +1,154 @@
+Bootstrap: docker
+From: nvidia/cuda-ppc64le:10.1-runtime
+
+%labels
+        maintainer "Norman Koch <norman.koch@tu-dresden.de>"
+        com.nvidia.volumes.needed="nvidia_driver"
+
+%environment
+        export DEBIAN_FRONTEND=noninteractive
+        export DS_NOTENSORFLOW=1
+        export DS_NODECODER=1
+        export MODULEPATH=/sw/installed/
+        export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
+        export LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+        export LANG=en_US.UTF-8
+        export LC_ALL=en_US.UTF-8
+
+        export MODULEPATH_ROOT=/sw/
+        export MODULEPATH="/sw/modules/ml/classic:/sw/modules/ml/vis:/sw/modules/ml/tools:/sw/modules/ml/toolchain:/sw/modules/ml/system:/sw/modules/ml/phys:/sw/modules/ml/perf:/sw/modules/ml/numlib:/sw/modules/ml/mpi:/sw/modules/ml/math:/sw/modules/ml/lib:/sw/modules/ml/lang:/sw/modules/ml/geo:/sw/modules/ml/devel:/sw/modules/ml/debugger:/sw/modules/ml/data:/sw/modules/ml/compiler:/sw/modules/ml/chem:/sw/modules/ml/cae:/sw/modules/ml/bio:/sw/modules/ml/base:/sw/modules/taurus/environment"
+
+        export NVIDIA_DRIVER_CAPABILITIES=compute,utility
+        export NVIDIA_VISIBLE_DEVICES=all
+        export NCCL_VERSION=2.3.5
+        export LIBRARY_PATH=/usr/local/cuda/lib64/stubs
+        export CUDNN=7.6.2.24-1
+        export CUDA_VERSION=10.0.130
+        export CUDA_PKG_VERSION=10-0=10.0.130-1
+
+	export HOSTIP=$(ip addr | grep 192 | sed -e 's/.*inet //' | sed -e 's/\/.*//')
+	echo ${HOSTIP}
+        export PYTHONPATH=/ds/training/:$PYTHONPATH
+
+
+	echoblue "Loading lmod and modules"
+                . /usr/local/lmod/lmod/init/profile
+
+                systemBaseMPATH="/sw/modules/taurus/environment"
+                ml use /sw/modules/taurus/environment
+                ml --force unload modenv/scs5
+                ml modenv/ml
+                ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
+
+%runscript
+        echoblue "Installing and mounting sshfs"
+                echored "Enter password when asked for it"
+                        sshfs -o StrictHostKeyChecking=no root@$HOSTIP:/host_data/software /software
+                        sshfs -o StrictHostKeyChecking=no root@$HOSTIP:/host_data/sw /sw
+
+        echoblue "Loading ml-stuff"
+                . /usr/local/lmod/lmod/init/profile
+
+                systemBaseMPATH="/sw/modules/taurus/environment"
+                ml use /sw/modules/taurus/environment
+
+                echogreen "Module Table"
+                        for i in $(seq -f "%03g" $_ModuleTable_Sz_); do eval "echo \$_ModuleTable${i}_"; done | base64 --decode
+
+                ml --force purge
+                ml modenv/ml
+                ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
+
+%help
+	Singularity-Package for installing DeepSpeech on ML
+
+	-- Run in a VM on Taurus
+	----> startInVM --arch=power9 --time="08:00:00"
+	-- make sure 'mount_host_data' was run in the VM
+
+%post
+        echo :"
+Singularity-Package for installing DeepSpeech on ML
+
+-- Run in a VM on Taurus
+----> startInVM --arch=power9 --time="08:00:00"
+-- make sure 'mount_host_data' was run in the VM
+        "
+
+        export BASEURL=https://raw.githubusercontent.com/NormanTUD/DeepspeechSingularityPowerPC/master/
+
+	apt-get update
+	apt-get install -y wget unzip python3-dev sshfs luarocks lua-posix gnupg curl
+
+        echoblue "Installing, mounting and using sshfs"
+		mkdir /sw/
+		mkdir /software/
+                echo "test" | sshfs -o password_stdin -o StrictHostKeyChecking=no root@$HOSTIP:/host_data/software /software
+                echo "test" | sshfs -o password_stdin -o StrictHostKeyChecking=no root@$HOSTIP:/host_data/sw /sw
+
+                . /usr/local/lmod/lmod/init/profile
+                ml use /sw/modules/taurus/environment
+                ml modenv/ml
+                ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
+
+        echoblue "Installing Lmod"
+                luarocks install luaposix
+
+                cd /lmodsrcdir
+                git clone https://github.com/TACC/Lmod.git .
+                ./configure --with-fastTCLInterp=no
+                make install
+
+                apt-get update
+
+                apt-get -y install lmod
+
+        echoblue "Installing webrtcvad"
+                cd /webrtcvad
+                wget --no-check-certificate $BASEURL/webrtcvad-2.0.10-ppc.tar.gz
+                pip3 install webrtcvad-2.0.10-ppc.tar.gz
+
+	echoblue "Installing swig"
+	        wget https://deac-riga.dl.sourceforge.net/project/swig/swig/swig-4.0.2/swig-4.0.2.tar.gz -O /swig/swig-4.0.2.tar.gz
+		tar xf swig-4.0.2.tar.gz
+		cd swig-4.0.2
+		./configure
+		make
+		make install
+
+
+	echoblue "Install Bazel 3.1.0"
+		curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
+		mv bazel.gpg /etc/apt/trusted.gpg.d/
+		echo "deb [arch=ppc64le] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
+		apt install -y bazel-3.1.0
+
+	echoblue "Installing DS"
+		mkdir /ds/
+		cd /ds/
+		git clone https://github.com/mozilla/DeepSpeech.git
+		git submodule sync tensorflow/
+		git submodule update --init tensorflow/
+		cd tensorflow
+		./configure
+		cd tensorflow
+		ln -s ../native_client
+
+		bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=monolithic -c opt --copt=-O3 --copt="-D_GLIBCXX_USE_CXX11_ABI=0" --copt=-fvisibility=hidden //native_client:libdeepspeech.so
+
+		bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=monolithic -c opt --copt=-O3 --copt="-D_GLIBCXX_USE_CXX11_ABI=0" --copt=-fvisibility=hidden //native_client:libdeepspeech.so //native_client:generate_scorer_package
+
+		cd ../DeepSpeech/native_client
+		make deepspeech
+
+		PREFIX=/usr/local make install
+
+
+		cd native_client/python
+		make bindings
+		pip install dist/deepspeech*
+
+		cd native_client/ctcdecode
+		make bindings NUM_PROCESSES=8
+		pip install dist/*.whl
+
