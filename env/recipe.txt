@@ -38,6 +38,7 @@ From: nvidia/cuda-ppc64le:10.1-runtime
                 ml use /sw/modules/taurus/environment
                 ml --force unload modenv/scs5
                 ml modenv/ml
+		ml numba/0.47.0-fosscuda-2019b-Python-3.7.4
                 ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
 
 %runscript
@@ -76,24 +77,54 @@ Singularity-Package for installing DeepSpeech on ML
         "
 
         export BASEURL=https://raw.githubusercontent.com/NormanTUD/DeepspeechSingularityPowerPC/master/
+	export DEBIAN_FRONTEND=noninteractive
 
 	apt-get update
-	apt-get install -y wget unzip python3-dev sshfs luarocks lua-posix gnupg curl
+	apt-get install -y\
+		wget\
+		unzip\
+		python3\
+		python3-dev\
+		sshfs\
+		luarocks\
+		lua-posix\
+		gnupg\
+		curl\
+		git\
+		iproute2\
+		tclsh\
+		python3-pip\
+		libpcre3-dev\
+		openjdk-11-jre\
+		openjdk-11-jdk sox\
+		libsox-dev\
+		libpng-dev\
+		libmagic-dev\
+		libtool\
+		libgsm-tools\
+		libgsmme-dev\
+		libgsm1-dev
+
+	ln -s $(which python3) /bin/python 
+	ln -s $(which pip3) /bin/pip
+	ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
+	dpkg-reconfigure --frontend noninteractive tzdata
+
+        export BASEURL=https://raw.githubusercontent.com/NormanTUD/DeepspeechSingularityPowerPC/master/
+        wget --no-check-certificate $BASEURL/echoc.sh
+        sh echoc.sh
 
         echoblue "Installing, mounting and using sshfs"
 		mkdir /sw/
 		mkdir /software/
+		export HOSTIP=$(ip addr | grep 192 | sed -e 's/.*inet //' | sed -e 's/\/.*//')
                 echo "test" | sshfs -o password_stdin -o StrictHostKeyChecking=no root@$HOSTIP:/host_data/software /software
                 echo "test" | sshfs -o password_stdin -o StrictHostKeyChecking=no root@$HOSTIP:/host_data/sw /sw
-
-                . /usr/local/lmod/lmod/init/profile
-                ml use /sw/modules/taurus/environment
-                ml modenv/ml
-                ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
 
         echoblue "Installing Lmod"
                 luarocks install luaposix
 
+		mkdir /lmodsrcdir
                 cd /lmodsrcdir
                 git clone https://github.com/TACC/Lmod.git .
                 ./configure --with-fastTCLInterp=no
@@ -103,52 +134,83 @@ Singularity-Package for installing DeepSpeech on ML
 
                 apt-get -y install lmod
 
+                . /usr/local/lmod/lmod/init/profile
+                #ml use /sw/modules/taurus/environment
+                #ml modenv/ml
+                #ml TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
+
         echoblue "Installing webrtcvad"
+                mkdir /webrtcvad
                 cd /webrtcvad
                 wget --no-check-certificate $BASEURL/webrtcvad-2.0.10-ppc.tar.gz
                 pip3 install webrtcvad-2.0.10-ppc.tar.gz
+	
+	echoblue "Installing virtualenv"
+		pip3 install virtualenv
+
+		mkdir /deepspeech-gpu-venv/
+		virtualenv -p python3 /deepspeech-gpu-venv/
+		. /deepspeech-gpu-venv/bin/activate
+
 
 	echoblue "Installing swig"
-	        wget https://deac-riga.dl.sourceforge.net/project/swig/swig/swig-4.0.2/swig-4.0.2.tar.gz -O /swig/swig-4.0.2.tar.gz
+		mkdir /swig/
+		cd /swig/
+	        wget https://deac-riga.dl.sourceforge.net/project/swig/swig/swig-4.0.2/swig-4.0.2.tar.gz
 		tar xf swig-4.0.2.tar.gz
 		cd swig-4.0.2
 		./configure
 		make
 		make install
 
-
 	echoblue "Install Bazel 3.1.0"
-		curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
-		mv bazel.gpg /etc/apt/trusted.gpg.d/
-		echo "deb [arch=ppc64le] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
-		apt install -y bazel-3.1.0
+		#curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
+		#mv bazel.gpg /etc/apt/trusted.gpg.d/
+		#echo "deb [arch=ppc64le] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
+		#apt install -y bazel-3.1.0
+
+		mkdir /bazel/
+		cd /bazel/
+		wget https://oplab9.parqtec.unicamp.br/pub/ppc64el/bazel/ubuntu_18.04/bazel_bin_ppc64le_3.1.0
+		chmod +x bazel_bin_ppc64le_3.1.0
+
+		cp bazel_bin_ppc64le_3.1.0 /bin/bazel
+
+	echoblue "Installing Numpy"
+		mkdir /numpy
+		cd /numpy
+		git clone --depth 1 https://github.com/numpy/numpy.git .
+		pip install .
 
 	echoblue "Installing DS"
 		mkdir /ds/
 		cd /ds/
 		git clone https://github.com/mozilla/DeepSpeech.git
+		cd DeepSpeech
 		git submodule sync tensorflow/
 		git submodule update --init tensorflow/
 		cd tensorflow
 		./configure
-		cd tensorflow
-		ln -s ../native_client
+		ln -s /ds/DeepSpeech/native_client native_client
+
+		sed -i "/pip /d" /ds/DeepSpeech/native_client/ctcdecode/Makefile
+
+		sed -i "/would build wheel with unsupported/d" /deepspeech-gpu-venv/lib/python3.6/site-packages/wheel/bdist_wheel.py
 
 		bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=monolithic -c opt --copt=-O3 --copt="-D_GLIBCXX_USE_CXX11_ABI=0" --copt=-fvisibility=hidden //native_client:libdeepspeech.so
 
 		bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=monolithic -c opt --copt=-O3 --copt="-D_GLIBCXX_USE_CXX11_ABI=0" --copt=-fvisibility=hidden //native_client:libdeepspeech.so //native_client:generate_scorer_package
 
-		cd ../DeepSpeech/native_client
+		cd /ds/DeepSpeech/native_client
 		make deepspeech
 
 		PREFIX=/usr/local make install
 
-
-		cd native_client/python
-		make bindings
-		pip install dist/deepspeech*
-
-		cd native_client/ctcdecode
+		cd /ds/DeepSpeech/native_client/ctcdecode
 		make bindings NUM_PROCESSES=8
-		pip install dist/*.whl
+		#pip install dist/*.whl
+
+		#cd /ds/DeepSpeech/native_client/python
+		#make bindings
+		#pip install dist/deepspeech*
 
